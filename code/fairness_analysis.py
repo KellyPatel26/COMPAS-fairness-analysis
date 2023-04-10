@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 
 DATA_PATH = "../data/propublica_data_for_fairml.csv"
 ATTRIBUTE_COLUMNS = ["Number_of_Priors", "score_factor", "Age_Above_FourtyFive", "Age_Below_TwentyFive", "African_American", "Asian", "Hispanic", "Native_American", "Other", "Female", "Misdemeanor"]
-NUM_EPOCHS = 100
+NUM_EPOCHS = 500
 
 class LinearClassifier(torch.nn.Module):
     def __init__(self, input_dim=2, output_dim=1):
