@@ -5,9 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from explainer import Explainer
+from raiwidgets import FairnessDashboard
+
 
 DATA_PATH = "../data/propublica_data_for_fairml.csv"
 ATTRIBUTE_COLUMNS = ["Number_of_Priors", "score_factor", "Age_Above_FourtyFive", "Age_Below_TwentyFive", "African_American", "Asian", "Hispanic", "Native_American", "Other", "Female", "Misdemeanor"]
+SENSITVE_COLUMNS = ["African_American", "Asian", "Hispanic", "Native_American", "Other"]
 NUM_EPOCHS = 500
 
 class LinearClassifier(torch.nn.Module):
@@ -74,12 +77,26 @@ if __name__ == "__main__":
     train_losses, test_losses = train(model, loss, optimizer, X_train, y_train, X_test, y_test)
     # loss_plot(train_losses=train_losses, test_losses=test_losses)
 
-    explainer = Explainer(model)
+ 
+    A_test = torch.tensor(data[SENSITVE_COLUMNS].values).float()
+    y_true = torch.tensor(labels.values).float()
+    # print(A_test)
+    model2 = LinearClassifier(input_dim=A_test.shape[1])
+
+    y_pred = model2(A_test).detach().squeeze()
+    print(np.isscalar(y_pred[0]), y_pred[0])
+
+    FairnessDashboard(sensitive_features=A_test, 
+                      y_true=y_true.tolist(),
+                      y_pred=y_pred.tolist())
+    # explainer = Explainer(model)
     # print(X_test[-1].shape)
     # print(y_test)
-    y_test_ints = y_test.type(torch.int64)
-    print(model(X_test[-1]))
-    print(explainer.lime(X_test[-1].unsqueeze(0)))
+    # y_test_ints = y_test.type(torch.int64)
+    # print(model(X_test[-1]))
+    # print(explainer.lime(X_test[-1].unsqueeze(0)))
+
+
 
 
   
