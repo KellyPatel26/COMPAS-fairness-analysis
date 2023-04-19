@@ -61,15 +61,24 @@ class Explainer():
             ax.bar(x_axis_data+idx*width, attr, width, align='center')
         
         ax.autoscale_view()
-        plt.tight_layout()
+        # plt.tight_layout()
         
-        ax.set_xticks(x_axis_data + 0.5)
-        ax.set_xticklabels(x_axis_data_labels)
+        ax.set_xticks(x_axis_data)
+        ax.set_xticklabels(x_axis_data_labels, rotation=90)
         
         plt.legend(legend_list, loc=3)
-        plt.show()
+        plt.savefig('graph.png', bbox_inches='tight')
 
-
+    ###
+    # 
+    # lime = explainer.lime(X_test[-8].unsqueeze(0))
+    # shapley = explainer.shapley(X_test[-8].unsqueeze(0))
+    # 
+    # explainer.plot([lime, shapley],
+    #                ['lime', 'shapley'],
+    #                ATTRIBUTE_COLUMNS)
+    # 
+    ###
 
 
 
