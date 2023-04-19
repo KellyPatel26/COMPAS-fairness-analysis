@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from explainer import Explainer
 
 DATA_PATH = "../data/propublica_data_for_fairml.csv"
 ATTRIBUTE_COLUMNS = ["Number_of_Priors", "score_factor", "Age_Above_FourtyFive", "Age_Below_TwentyFive", "African_American", "Asian", "Hispanic", "Native_American", "Other", "Female", "Misdemeanor"]
@@ -71,8 +72,13 @@ if __name__ == "__main__":
     loss = config_loss()
     optimizer = config_optimizer(model)
     train_losses, test_losses = train(model, loss, optimizer, X_train, y_train, X_test, y_test)
+    # loss_plot(train_losses=train_losses, test_losses=test_losses)
 
-    loss_plot(train_losses=train_losses, test_losses=test_losses)
+    explainer = Explainer(model)
+    print(X_test[-1].shape)
+    print(y_test[-1].shape)
+    print(model(X_test[-1]))
+    print(explainer.lime(X_test[-1].unsqueeze(0), y_test[-1]))
 
 
   

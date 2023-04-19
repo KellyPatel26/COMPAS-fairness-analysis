@@ -1,7 +1,7 @@
 import captum
 import numpy as np
 
-from captum.attr import LimeBase, ShapleyValueSampling, FeaturePermutation, GradientShap, IntegratedGradients
+from captum.attr import LimeBase, Lime, ShapleyValueSampling, FeaturePermutation, GradientShap, IntegratedGradients
 from captum._utils.models.linear_model import SkLearnLinearModel
 from captum.attr._core.lime import get_exp_kernel_similarity_function
 
@@ -10,9 +10,9 @@ class Explainer():
                  model):
         self.model = model
         
-        self.lime_ex = LimeBase(
+        self.lime_ex = Lime(
             self.model,
-            SkLearnLinearModel(),
+            SkLearnLinearModel("linear_model.Ridge"),
             get_exp_kernel_similarity_function('euclidean')
         )
         
