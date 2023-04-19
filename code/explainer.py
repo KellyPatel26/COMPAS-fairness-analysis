@@ -25,26 +25,22 @@ class Explainer():
             self.model
         )
         
-        self.grad_shap_ex = GradientShap(
+        self.integrated_gradients_ex = IntegratedGradients(
             self.model
         )
         
-    def lime(self, input):
-        return self.lime_ex.attribute(input, target=None)
+    def lime(self, inputs):
+        return self.lime_ex.attribute(inputs, target=None)
 
-    def shapley(self, input):
-        return self.shapley_ex.attribute(input, target=None)
+    def shapley(self, inputs):
+        return self.shapley_ex.attribute(inputs, target=None)
 
-    def dice(self, input):
+    def dice(self, inputs):
         # WILL NOT WORK WITH SINGLE FEATURE, NEEDS MULTIPLE INPUTS
-        return self.dice_ex.attribute(input, target=None)
+        return self.dice_ex.attribute(inputs, target=None)
 
-    # def grad_shap(self, input):
-    #     return self.grad_shap_ex.attribute(
-    #         input,
-    #         target=None,
-    #         n_samples=20
-    #     )
+    def integrated_gradients(self, inputs):
+        return self.integrated_gradients_ex.attribute(inputs)
 
     def plot(self, attributions_list, legend_list, feature_names):
         
