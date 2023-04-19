@@ -75,10 +75,11 @@ if __name__ == "__main__":
     # loss_plot(train_losses=train_losses, test_losses=test_losses)
 
     explainer = Explainer(model)
-    print(X_test[-1].shape)
-    print(y_test[-1].shape)
+    # print(X_test[-1].shape)
+    # print(y_test)
+    y_test_ints = y_test.type(torch.int64)
     print(model(X_test[-1]))
-    print(explainer.lime(X_test[-1].unsqueeze(0), y_test[-1]))
+    print(explainer.lime(X_test[-1].unsqueeze(0)))
 
 
   

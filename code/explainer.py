@@ -28,19 +28,19 @@ class Explainer():
             self.model
         )
         
-    def lime(self, input, target):
-        return self.lime_ex.attribute(input, target=target)
+    def lime(self, input):
+        return self.lime_ex.attribute(input, target=None)
 
-    def shapley(self, input, target):
-        return self.shapley_ex.attribute(input, target=target)
+    def shapley(self, input):
+        return self.shapley_ex.attribute(input, target=None)
 
-    def dice(self, input, target):
-        return self.dice_ex(input, target=target)
+    def dice(self, input):
+        return self.dice_ex(input, target=None)
 
-    def grad_shap(self, input, target):
+    def grad_shap(self, input):
         return self.grad_shap_ex(
             input,
-            target=target,
+            target=None,
             n_samples=20
         )
 
