@@ -13,13 +13,52 @@ ATTRIBUTE_COLUMNS = ["Number_of_Priors", "score_factor", "Age_Above_FourtyFive",
 SENSITVE_COLUMNS = ["African_American", "Asian", "Hispanic", "Native_American", "Other"]
 NUM_EPOCHS = 500
 
-class LinearClassifier(torch.nn.Module):
-    def __init__(self, input_dim=2, output_dim=1):
+class SingleLinearClassifier(torch.nn.Module):
+    def __init__(self, input_dim=18, output_dim=1):
         super(LinearClassifier, self).__init__()
         self.linear = torch.nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
         x = self.linear(x)
+        return x
+
+def config_loss():
+    return torch.nn.BCEWithLogitsLoss()
+
+def config_optimizer(model):
+    return torch.optim.Adam(model.parameters())
+
+def train(model, loss, optimizer, X_train, y_train, X_test, y_test):
+    train_losses = []
+    test_losses = []
+
+    for epoch in range(NUM_EPOCHS):
+        out = model(X_train)
+        l = loss(out, y_train)
+        optimizer.zero_grad()
+        l.backward()
+        optimizer.step()
+
+        test_out = model(X_test)
+        test_l = loss(test_out, y_test)
+        train_losses.append(l.item())
+        test_losses.append(test_l.item())
+
+        print("Epoch {}: Training loss: {}, Test loss: {}".format(epoch, l.item(), test_l.item()))
+    return train_losses, test_losses
+
+
+class TripleLinearClassifier(torch.nn.Module):
+    def __init__(self, input_dim=18, output_dim=1):
+        super(LinearClassifier, self).__init__()
+        self.linear1 = torch.nn.Linear(input_dim, 10)
+        self.linear2 = torch.nn.Linear(10, 5)
+        self.linear3 = torch.nn.Linear(5, output_dim)
+
+    def forward(self, x):
+        x = self.linear1(x)
+        x = self.linear2(x)
+        x = self.linear3(x)
         return x
 
 def config_loss():
