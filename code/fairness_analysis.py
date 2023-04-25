@@ -15,7 +15,7 @@ NUM_EPOCHS = 500
 
 class SingleLinearClassifier(torch.nn.Module):
     def __init__(self, input_dim=18, output_dim=1):
-        super(LinearClassifier, self).__init__()
+        super(SingleLinearClassifier, self).__init__()
         self.linear = torch.nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
@@ -50,7 +50,7 @@ def train(model, loss, optimizer, X_train, y_train, X_test, y_test):
 
 class TripleLinearClassifier(torch.nn.Module):
     def __init__(self, input_dim=18, output_dim=1):
-        super(LinearClassifier, self).__init__()
+        super(TripleLinearClassifier, self).__init__()
         self.linear1 = torch.nn.Linear(input_dim, 10)
         self.linear2 = torch.nn.Linear(10, 5)
         self.linear3 = torch.nn.Linear(5, output_dim)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     _, input_dimension = X_train.shape
 
-    model = LinearClassifier(input_dim=input_dimension)
+    model = TripleLinearClassifier(input_dim=input_dimension)
     X_train = torch.from_numpy(X_train.astype(np.float32))
     X_test = torch.from_numpy(X_test.astype(np.float32))
     y_train = torch.from_numpy(y_train.astype(np.float32)).reshape(-1, 1)
@@ -114,20 +114,20 @@ if __name__ == "__main__":
     loss = config_loss()
     optimizer = config_optimizer(model)
     train_losses, test_losses = train(model, loss, optimizer, X_train, y_train, X_test, y_test)
-    # loss_plot(train_losses=train_losses, test_losses=test_losses)
+    loss_plot(train_losses=train_losses, test_losses=test_losses)
 
  
-    A_test = torch.tensor(data[SENSITVE_COLUMNS].values).float()
-    y_true = torch.tensor(labels.values).float()
+    # A_test = torch.tensor(data[SENSITVE_COLUMNS].values).float()
+    # y_true = torch.tensor(labels.values).float()
     # print(A_test)
-    model2 = LinearClassifier(input_dim=A_test.shape[1])
+    # model2 = SingleLinearClassifier(input_dim=A_test.shape[1])
 
-    y_pred = model2(A_test).detach().squeeze()
-    print(np.isscalar(y_pred[0]), y_pred[0])
+    # y_pred = model2(A_test).detach().squeeze()
+    # print(np.isscalar(y_pred[0]), y_pred[0])
 
-    FairnessDashboard(sensitive_features=A_test, 
-                      y_true=y_true.tolist(),
-                      y_pred=y_pred.tolist())
+    # FairnessDashboard(sensitive_features=A_test, 
+    #                   y_true=y_true.tolist(),
+    #                   y_pred=y_pred.tolist())
     # explainer = Explainer(model)
     # print(X_test[-1].shape)
     # print(y_test)
