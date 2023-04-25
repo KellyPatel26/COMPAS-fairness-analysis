@@ -2,11 +2,29 @@ import pandas as pd
 import numpy as np 
 import seaborn as sns 
 import matplotlib.pyplot as plt 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 import os 
-from classifiers import OneLayerLinear
+import torch
+from fairness_analysis import TripleLinearClassifier, SingleLinearClassifier, config_loss, config_optimizer, train
+from explainer import Explainer
 
 DATA_PATH = "../data/compas-scores.csv"
+
+def loss_plot(train_losses, test_losses):
+    plt.plot(train_losses, label = 'train loss')
+    plt.plot(test_losses, label = 'test loss')
+    plt.legend()
+    plt.savefig('loss.png')
+    plt.clf()
+    
+def acc_plot(train_acc, test_acc):
+    plt.plot(train_acc, label = 'train accuracy')
+    plt.plot(test_acc, label = 'test accuracy')
+    plt.legend()
+    plt.savefig('accuracy.png')
+    plt.clf()
 
 date_cols = ["compas_screening_date","dob",
              "c_jail_in","c_jail_out","c_offense_date",
@@ -123,12 +141,39 @@ df_final_c.reset_index(drop=True,inplace=True)
 df_final_v.reset_index(drop=True,inplace=True)
 
 train_columns = [
-    "sex", "juv_fel_count", "juv_misd_count", "juv_other_count",
+    "juv_fel_count", "juv_misd_count", "juv_other_count",
     "priors_count", "african-american", "caucasian", "hispanic",
     "other", "asian", "native-american", "less25", "greater45",
     "25to45", "male", "female", "felony", "misdemeanor"
 ]
 
-# model = OneLayerLinear()
+data = df_final_c[train_columns]
+labels = df_final_c["binary_decile_score"]
+X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size = 0.3, random_state = 42)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+y_train = y_train.to_numpy()
+y_test = y_test.to_numpy()
+X_train = torch.from_numpy(X_train.astype(np.float32))
+X_test = torch.from_numpy(X_test.astype(np.float32))
+y_train = torch.from_numpy(y_train.astype(np.float32)).reshape(-1, 1)
+y_test = torch.from_numpy(y_test.astype(np.float32)).reshape(-1, 1)
+_, input_dimension = X_train.shape
+model = TripleLinearClassifier(input_dim=input_dimension)
 
+loss = config_loss()
+optimizer = config_optimizer(model)
+train_losses, test_losses, train_acc, test_acc = train(model, loss, optimizer, X_train, y_train, X_test, y_test)
+loss_plot(train_losses=train_losses, test_losses=test_losses)
+acc_plot(train_acc=train_acc, test_acc=test_acc)
+
+explainer = Explainer(model)
+
+lime = explainer.lime(X_test[-8].unsqueeze(0))
+shapley = explainer.shapley(X_test[-8].unsqueeze(0))
+
+explainer.plot([lime, shapley],
+                ['lime', 'shapley'],
+                train_columns)
 

@@ -1,11 +1,12 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import torch
+import torch.nn.functional as f
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from explainer import Explainer
-from raiwidgets import FairnessDashboard
+# from raiwidgets import FairnessDashboard
 
 
 DATA_PATH = "../data/propublica_data_for_fairml.csv"
@@ -19,7 +20,7 @@ class SingleLinearClassifier(torch.nn.Module):
         self.linear = torch.nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
-        x = self.linear(x)
+        x = f.relu(self.linear(x))
         return x
 
 def config_loss():
@@ -56,9 +57,9 @@ class TripleLinearClassifier(torch.nn.Module):
         self.linear3 = torch.nn.Linear(5, output_dim)
 
     def forward(self, x):
-        x = self.linear1(x)
-        x = self.linear2(x)
-        x = self.linear3(x)
+        x = f.relu(self.linear1(x))
+        x = f.relu(self.linear2(x))
+        x = f.relu(self.linear3(x))
         return x
 
 def config_loss():
@@ -69,7 +70,9 @@ def config_optimizer(model):
 
 def train(model, loss, optimizer, X_train, y_train, X_test, y_test):
     train_losses = []
+    train_acc = []
     test_losses = []
+    test_acc = []
 
     for epoch in range(NUM_EPOCHS):
         out = model(X_train)
@@ -81,14 +84,25 @@ def train(model, loss, optimizer, X_train, y_train, X_test, y_test):
         test_out = model(X_test)
         test_l = loss(test_out, y_test)
         train_losses.append(l.item())
+        out_classes = torch.where(out > 0.5, 1, 0)
+        train_acc.append(torch.sum(out_classes == y_train).item()/len(out))
         test_losses.append(test_l.item())
+        test_classes = torch.where(test_out > 0.5, 1, 0)
+        test_acc.append(torch.sum(test_classes == y_test).item()/len(test_out))
 
-        print("Epoch {}: Training loss: {}, Test loss: {}".format(epoch, l.item(), test_l.item()))
-    return train_losses, test_losses
+        print("Epoch {}: Training loss: {}, Test loss: {}\n Training Acc: {} Test Acc: {}"
+              .format(epoch, l.item(), test_l.item(), train_acc[-1], test_acc[-1]))
+    return train_losses, test_losses, train_acc, test_acc
 
 def loss_plot(train_losses, test_losses):
     plt.plot(train_losses, label = 'train loss')
     plt.plot(test_losses, label = 'test loss')
+    plt.legend()
+    plt.show()
+    
+def acc_plot(train_acc, test_acc):
+    plt.plot(train_acc, label = 'train accuracy')
+    plt.plot(test_acc, label = 'test accuracy')
     plt.legend()
     plt.show()
 
@@ -113,7 +127,7 @@ if __name__ == "__main__":
 
     loss = config_loss()
     optimizer = config_optimizer(model)
-    train_losses, test_losses = train(model, loss, optimizer, X_train, y_train, X_test, y_test)
+    train_losses, test_losses, train_acc, test_acc = train(model, loss, optimizer, X_train, y_train, X_test, y_test)
     loss_plot(train_losses=train_losses, test_losses=test_losses)
 
  
