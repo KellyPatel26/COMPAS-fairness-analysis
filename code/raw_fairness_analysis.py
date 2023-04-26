@@ -26,6 +26,21 @@ def acc_plot(train_acc, test_acc):
     plt.savefig('accuracy.png')
     plt.clf()
 
+def plot_bar(x, height, pos_neg, labels, title, save_name):
+    ax = plt.subplot()
+    ax.set_ylabel('Importance count')
+    colours = np.array(['blue'] * len(x))
+    colours[pos_neg > 0] = 'red'
+    ax.bar(x, height, color=colours)
+    legend_labels = ["Positive attribution" ,"Negative attribution"]
+    handles = [plt.Rectangle((0,0),1,1, color="red"), plt.Rectangle((0,0),1,1, color="blue")]
+    ax.legend(handles, legend_labels)
+    
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=90)
+    ax.set_title(title)
+    plt.savefig(save_name, bbox_inches='tight')
+
 date_cols = ["compas_screening_date","dob",
              "c_jail_in","c_jail_out","c_offense_date",
              "v_screening_date","screening_date",
@@ -102,7 +117,6 @@ df_final["felony"] = np.where(
     df_final["c_charge_degree"] == "F", 1, 0
 )
 
-print(df_final["c_charge_degree"])
 for col in ["sex","c_charge_degree"]:
     df_final[col] = df_final[col].astype("category")
 
@@ -177,3 +191,13 @@ explainer.plot([lime, shapley],
                 ['lime', 'shapley'],
                 train_columns)
 
+feature_count, pos_neg_count = explainer.count_lime(X_test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime',
+         save_name='lime.png')

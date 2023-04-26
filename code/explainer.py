@@ -68,6 +68,41 @@ class Explainer():
         
         plt.legend(legend_list, loc=3)
         plt.savefig('graph.png', bbox_inches='tight')
+        plt.clf()
+
+    def count_lime(self, train_data, n_count, feature_num):
+        feature_counts = np.zeros(feature_num)
+        pos_neg_count = np.zeros(feature_num)
+        
+        attributions = self.lime(train_data)
+        print(attributions.shape)
+        
+        for _ in range(n_count):
+            max_args = np.argmax(np.abs(attributions), axis=1)
+            print(max_args)
+            for idx, arg in enumerate(max_args):
+                pos_neg_count[arg] = pos_neg_count[arg] + 1 if attributions[idx,arg] > 0 else pos_neg_count[arg] - 1
+                feature_counts[arg] += 1
+                attributions[idx, arg] = 0
+        
+        return feature_counts, pos_neg_count
+    
+    def count_shap(self, train_data, n_count, feature_num):
+        feature_counts = np.zeros(feature_num)
+        pos_neg_count = np.zeros(feature_num)
+        
+        attributions = self.shapley(train_data)
+        print(attributions.shape)
+        
+        for _ in range(n_count):
+            max_args = np.argmax(np.abs(attributions), axis=1)
+            print(max_args)
+            for idx, arg in enumerate(max_args):
+                pos_neg_count[arg] = pos_neg_count[arg] + 1 if attributions[idx,arg] > 0 else pos_neg_count[arg] - 1
+                feature_counts[arg] += 1
+                attributions[idx, arg] = 0
+        
+        return feature_counts, pos_neg_count     
 
     ###
     # 
