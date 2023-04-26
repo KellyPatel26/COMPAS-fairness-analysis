@@ -75,11 +75,9 @@ class Explainer():
         pos_neg_count = np.zeros(feature_num)
         
         attributions = self.lime(train_data)
-        print(attributions.shape)
         
         for _ in range(n_count):
             max_args = np.argmax(np.abs(attributions), axis=1)
-            print(max_args)
             for idx, arg in enumerate(max_args):
                 pos_neg_count[arg] = pos_neg_count[arg] + 1 if attributions[idx,arg] > 0 else pos_neg_count[arg] - 1
                 feature_counts[arg] += 1
@@ -92,11 +90,9 @@ class Explainer():
         pos_neg_count = np.zeros(feature_num)
         
         attributions = self.shapley(train_data)
-        print(attributions.shape)
         
         for _ in range(n_count):
             max_args = np.argmax(np.abs(attributions), axis=1)
-            print(max_args)
             for idx, arg in enumerate(max_args):
                 pos_neg_count[arg] = pos_neg_count[arg] + 1 if attributions[idx,arg] > 0 else pos_neg_count[arg] - 1
                 feature_counts[arg] += 1
