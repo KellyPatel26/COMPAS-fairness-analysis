@@ -9,7 +9,7 @@ import os
 import torch
 from fairness_analysis import TripleLinearClassifier, SingleLinearClassifier, config_loss, config_optimizer, train
 from explainer import Explainer
-
+from utils import get_compas_wrong_dfs, get_compas_race_dfs, get_compas_gender_dfs, get_base_dfs
 DATA_PATH = "../data/compas-scores.csv"
 
 def loss_plot(train_losses, test_losses):
@@ -40,6 +40,7 @@ def plot_bar(x, height, pos_neg, labels, title, save_name):
     ax.set_xticklabels(labels, rotation=90)
     ax.set_title(title)
     plt.savefig(save_name, bbox_inches='tight')
+    plt.clf()
 
 date_cols = ["compas_screening_date","dob",
              "c_jail_in","c_jail_out","c_offense_date",
@@ -142,66 +143,8 @@ def two_years(col,col_recid):
 def change_cols(train_columns, to_remove):
     return [x for x in train_columns if x not in to_remove]
 
-def plot_race_diffs(df):
-    races = ["african-american", "asian", "caucasian", "hispanic", "other", "native-american"]
-    df_aa = df[df["african-american"] == 1]
-    df_asian = df[df["asian"] == 1]
-    df_caucasian = df[df["caucasian"] == 1]
-    df_hispanic = df[df["hispanic"] == 1]
-    df_other = df[df["other"] == 1]
-    df_na = df[df["native-american"] == 1]
 
-    avg_aa_jvfel = df_aa["juv_fel_count"].mean()
-    avg_asian_jvfel = df_asian["juv_fel_count"].mean()
-    avg_caucasian_jvfel = df_caucasian["juv_fel_count"].mean()
-    avg_hispanic_jvfel = df_hispanic["juv_fel_count"].mean()
-    avg_other_jvfel = df_other["juv_fel_count"].mean()
-    avg_na_jvfel = df_na["juv_fel_count"].mean()
-    jvfels = [avg_aa_jvfel, avg_asian_jvfel, avg_caucasian_jvfel, avg_hispanic_jvfel, avg_other_jvfel, avg_na_jvfel]
-
-    avg_aa_priors = df_aa["priors_count"].mean()
-    avg_asian_priors = df_asian["priors_count"].mean()
-    avg_caucasian_priors = df_caucasian["priors_count"].mean()
-    avg_hispanic_priors = df_hispanic["priors_count"].mean()
-    avg_other_priors = df_other["priors_count"].mean()
-    avg_na_priors = df_na["priors_count"].mean()
-    priors = [avg_aa_priors, avg_asian_priors, avg_caucasian_priors, avg_hispanic_priors, avg_other_priors, avg_na_priors]
-
-    avg_aa_md = df_aa["misdemeanor"].mean()
-    avg_asian_md= df_asian["misdemeanor"].mean()
-    avg_caucasian_md = df_caucasian["misdemeanor"].mean()
-    avg_hispanic_md = df_hispanic["misdemeanor"].mean()
-    avg_other_md = df_other["misdemeanor"].mean()
-    avg_na_md = df_na["misdemeanor"].mean()
-    misdemeanors = [avg_aa_md, avg_asian_md, avg_caucasian_md, avg_hispanic_md, avg_other_md, avg_na_md]
-
-    plt.rcParams['figure.figsize'] = [10, 10]
-    fig, ax = plt.subplots(3) 
-    ax[0].bar(races, jvfels, color="maroon", width=0.4)
-    ax[0].set(title='Juvenile Felony Count Distribution', ylabel='Avg Fel Count', xlabel="Race");  
-    ax[1].bar(races, priors, color="maroon", width=0.4)
-    ax[1].set(title='Priors Count Distribution', ylabel='Avg Prior Count', xlabel="Race");
-    ax[2].bar(races, misdemeanors, color="maroon", width=0.4)
-    ax[2].set(title='Misdemeanor Count Distribution', ylabel='Avg Misdemeanor Count', xlabel="Race");
-    plt.tight_layout()
-    plt.savefig('race_distribs.png')
-    plt.clf()
-
-
-# check if person recided
-df_final["two_years_r"] = two_years("r_offense_date","is_recid")
-# check if person recided violentley
-df_final["two_years_v"] = two_years("vr_offense_date","is_violent_recid")
-
-df_final_c = df_final[df_final["two_years_r"] !=3].copy()
-df_final_v = df_final[df_final["two_years_v"] != 3].copy()
-
-# binarise decile scores
-df_final_c["binary_decile_score"] = np.where(df_final_c["decile_score"] >=5,1,0)
-df_final_v["binary_v_decile_score"] = np.where(df_final_v["v_decile_score"] >=5,1,0)
-
-df_final_c.reset_index(drop=True,inplace=True)
-df_final_v.reset_index(drop=True,inplace=True)
+df_final_c, df_final_v = get_base_dfs()
 
 train_columns = [
     "juv_fel_count", "juv_misd_count", "juv_other_count",
@@ -215,9 +158,10 @@ train_columns = [
 
 races={"african-american", "asian", "caucasian", "hispanic", "other", "native-american"}
 AA = {"african-american"}
+ages = {"less25", "greater45", "25to45"}
 genders = {"male", "female"}
 none = {}
-train_columns = change_cols(train_columns, genders)
+train_columns = change_cols(train_columns, none)
 
 data = df_final_c[train_columns]
 
@@ -251,7 +195,23 @@ explainer.plot([lime, shapley],
                 train_columns)
 
 
-feature_count, pos_neg_count = explainer.count_lime(X_test,
+afr_ame, cauc, hispanic, other, asian, nat_ame = get_compas_race_dfs(df_final_c)
+mod_X_test = scaler.transform(nat_ame[train_columns])
+mod_X_test = torch.from_numpy(mod_X_test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_shap(mod_X_test,
+                                                    4,
+                                                    input_dimension)
+
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='SHAP - COMPAS NA Race Data, No Attributes Removed',
+         save_name='C_NA_shap_NoRemoved.png')
+
+feature_count, pos_neg_count = explainer.count_lime(mod_X_test,
                                                     4,
                                                     input_dimension)
 
@@ -259,5 +219,32 @@ plot_bar(x=np.arange(input_dimension),
          height=feature_count,
          pos_neg=pos_neg_count,
          labels=train_columns,
-         title='Lime - All Data, Gender Attributes Removed',
-         save_name='ALLLime_GenderRemoved.png')
+         title='LIME - COMPAS NA Race Data, No Attributes Removed',
+         save_name='C_NA_lime_NoRemoved.png')
+
+afr_ame, cauc, hispanic, other, asian, nat_ame = get_compas_race_dfs(df_final_v)
+
+mod_X_test = scaler.transform(nat_ame[train_columns])
+mod_X_test = torch.from_numpy(mod_X_test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_shap(mod_X_test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='SHAP - COMPAS NA Race Data, No Attributes Removed',
+         save_name='V_NA_shap_NoRemoved.png')
+
+feature_count, pos_neg_count = explainer.count_lime(mod_X_test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='LIME - COMPAS NA Race Data, No Attributes Removed',
+         save_name='V_NA_lime_NoRemoved.png')

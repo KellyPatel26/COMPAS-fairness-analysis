@@ -186,3 +186,48 @@ def get_compas_gender_dfs(dataframe):
     f = dataframe[dataframe["female"] == 1]
     
     return m, f
+
+def plot_race_diffs(df):
+    races = ["african-american", "asian", "caucasian", "hispanic", "other", "native-american"]
+    df_aa = df[df["african-american"] == 1]
+    df_asian = df[df["asian"] == 1]
+    df_caucasian = df[df["caucasian"] == 1]
+    df_hispanic = df[df["hispanic"] == 1]
+    df_other = df[df["other"] == 1]
+    df_na = df[df["native-american"] == 1]
+
+    avg_aa_jvfel = df_aa["juv_fel_count"].mean()
+    avg_asian_jvfel = df_asian["juv_fel_count"].mean()
+    avg_caucasian_jvfel = df_caucasian["juv_fel_count"].mean()
+    avg_hispanic_jvfel = df_hispanic["juv_fel_count"].mean()
+    avg_other_jvfel = df_other["juv_fel_count"].mean()
+    avg_na_jvfel = df_na["juv_fel_count"].mean()
+    jvfels = [avg_aa_jvfel, avg_asian_jvfel, avg_caucasian_jvfel, avg_hispanic_jvfel, avg_other_jvfel, avg_na_jvfel]
+
+    avg_aa_priors = df_aa["priors_count"].mean()
+    avg_asian_priors = df_asian["priors_count"].mean()
+    avg_caucasian_priors = df_caucasian["priors_count"].mean()
+    avg_hispanic_priors = df_hispanic["priors_count"].mean()
+    avg_other_priors = df_other["priors_count"].mean()
+    avg_na_priors = df_na["priors_count"].mean()
+    priors = [avg_aa_priors, avg_asian_priors, avg_caucasian_priors, avg_hispanic_priors, avg_other_priors, avg_na_priors]
+
+    avg_aa_md = df_aa["misdemeanor"].mean()
+    avg_asian_md= df_asian["misdemeanor"].mean()
+    avg_caucasian_md = df_caucasian["misdemeanor"].mean()
+    avg_hispanic_md = df_hispanic["misdemeanor"].mean()
+    avg_other_md = df_other["misdemeanor"].mean()
+    avg_na_md = df_na["misdemeanor"].mean()
+    misdemeanors = [avg_aa_md, avg_asian_md, avg_caucasian_md, avg_hispanic_md, avg_other_md, avg_na_md]
+
+    plt.rcParams['figure.figsize'] = [10, 10]
+    fig, ax = plt.subplots(3) 
+    ax[0].bar(races, jvfels, color="maroon", width=0.4)
+    ax[0].set(title='Juvenile Felony Count Distribution', ylabel='Avg Fel Count', xlabel="Race");  
+    ax[1].bar(races, priors, color="maroon", width=0.4)
+    ax[1].set(title='Priors Count Distribution', ylabel='Avg Prior Count', xlabel="Race");
+    ax[2].bar(races, misdemeanors, color="maroon", width=0.4)
+    ax[2].set(title='Misdemeanor Count Distribution', ylabel='Avg Misdemeanor Count', xlabel="Race");
+    plt.tight_layout()
+    plt.savefig('race_distribs.png')
+    plt.clf()
