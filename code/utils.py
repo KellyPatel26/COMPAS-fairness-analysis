@@ -42,7 +42,7 @@ def plot_bar(x, height, pos_neg, labels, title, save_name):
     plt.savefig(save_name, bbox_inches='tight')
     plt.clf()
     
-def get_dataframes():
+def get_base_dfs():
     date_cols = ["compas_screening_date","dob",
              "c_jail_in","c_jail_out","c_offense_date",
              "v_screening_date","screening_date",
@@ -156,9 +156,33 @@ def get_dataframes():
     
     return df_final_c, df_final_v
     
-train_columns = [
-    "juv_fel_count", "juv_misd_count", "juv_other_count",
-    "priors_count", "african-american", "caucasian", "hispanic",
-    "other", "asian", "native-american", "less25", "greater45",
-    "25to45", "male", "female", "felony", "misdemeanor"
-]
+def get_compas_wrong_dfs():
+    df_final_c, df_final_v = get_base_dfs()
+    
+    compas_wrong_c = df_final_c[df_final_c["two_years_r"] != df_final_c["binary_decile_score"]]
+    compas_fp_c = compas_wrong_c[df_final_c["binary_decile_score"] == 1]
+    compas_fn_c = compas_wrong_c[df_final_c["binary_decile_score"] == 0]
+    
+    compas_wrong_v = df_final_v[df_final_v["two_years_v"] != df_final_v["binary_v_decile_score"]]
+    compas_fp_v = compas_wrong_v[df_final_v["binary_v_decile_score"] == 1]
+    compas_fn_v = compas_wrong_v[df_final_v["binary_v_decile_score"] == 0]
+    
+    return compas_fp_c, compas_fn_c, compas_fp_v, compas_fn_v
+
+def get_compas_race_dfs(dataframe):
+    
+    afr_ame = dataframe[dataframe["african-american"] == 1]
+    cauc = dataframe[dataframe["caucasian"] == 1]
+    hispanic = dataframe[dataframe["hispanic"] == 1]
+    other = dataframe[dataframe["other"] == 1]
+    asian = dataframe[dataframe["asian"] == 1]
+    nat_ame = dataframe[dataframe["native-american"] == 1]
+
+    return afr_ame, cauc, hispanic, other, asian, nat_ame
+
+def get_compas_gender_dfs(dataframe):
+    
+    m = dataframe[dataframe["male"] == 1]
+    f = dataframe[dataframe["female"] == 1]
+    
+    return m, f
