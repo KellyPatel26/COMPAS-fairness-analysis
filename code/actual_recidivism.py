@@ -1,4 +1,4 @@
-from utils import loss_plot, acc_plot, plot_bar, get_base_dfs, get_compas_wrong_dfs
+from utils import loss_plot, acc_plot, plot_bar, get_base_dfs, get_compas_wrong_dfs, get_compas_gender_dfs, get_compas_race_dfs
 from fairness_analysis import TripleLinearClassifier, SingleLinearClassifier, config_loss, config_optimizer, train
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -6,14 +6,18 @@ from explainer import Explainer
 import torch
 import numpy as np
 
-df_final, _ = get_base_dfs()
+_, df_final = get_base_dfs()
 
 train_columns = [
     "juv_fel_count", "juv_misd_count", "juv_other_count",
     "priors_count", "african-american", "caucasian", "hispanic",
     "other", "asian", "native-american", "less25", "greater45",
-    "25to45", "male", "female", "felony", "misdemeanor"
+    "25to45", "felony", "misdemeanor"
 ]
+
+
+
+
 
 data = df_final[train_columns]
 labels = df_final["two_years_r"]
@@ -46,8 +50,8 @@ plot_bar(x=np.arange(input_dimension),
          height=feature_count,
          pos_neg=pos_neg_count,
          labels=train_columns,
-         title='Lime - All Features Included',
-         save_name='lime_all_feat_c.png')
+         title='Lime - All Data, Gender Removed.',
+         save_name='lime_all_feat_no_gender_c.png')
 
 feature_count, pos_neg_count = explainer.count_shap(X_test,
                                                     4,
@@ -57,7 +61,224 @@ plot_bar(x=np.arange(input_dimension),
          height=feature_count,
          pos_neg=pos_neg_count,
          labels=train_columns,
-         title='Shapley - All Features Included',
-         save_name='shap_all_feat_c.png')
+         title='Shapley - All Data, Gender Removed.',
+         save_name='shap_all_feat_no_gender_c.png')
+
+afr, cauc, his, oth, asi, nat = get_compas_race_dfs(df_final)
+
+test = afr[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - African-American Data, Gender Removed.',
+         save_name='lime_afr_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - African-American Data, Gender Removed.',
+         save_name='shap_afr_feat_no_gender_c.png')
+
+test = cauc[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Caucasian Data, Gender Removed.',
+         save_name='lime_cauc_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Caucasian, Gender Removed.',
+         save_name='shap_cauc_feat_no_gender_c.png')
+
+test = his[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Hispanic Data, Gender Removed.',
+         save_name='lime_his_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Hispanic, Gender Removed.',
+         save_name='shap_his_feat_no_gender_c.png')
+
+
+test = oth[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Other Data, Gender Removed.',
+         save_name='lime_oth_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Other, Gender Removed.',
+         save_name='shap_oth_feat_no_gender_c.png')
+
+test = asi[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Asian Data, Gender Removed.',
+         save_name='lime_asi_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Asian, Gender Removed.',
+         save_name='shap_asi_feat_no_gender_c.png')
+
+test = nat[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Native-American Data, Gender Removed.',
+         save_name='lime_nat_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Native-American, Gender Removed.',
+         save_name='shap_nat_feat_no_gender_c.png')
+
+m, f = get_compas_gender_dfs(df_final)
+
+test = m[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Male Data, Gender Removed.',
+         save_name='lime_m_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Male Data, Gender Removed.',
+         save_name='shap_m_feat_no_gender_c.png')
+
+test = f[train_columns]
+test = scaler.transform(test)
+test = torch.from_numpy(test.astype(np.float32))
+
+feature_count, pos_neg_count = explainer.count_lime(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Lime - Female Data, Gender Removed.',
+         save_name='lime_f_feat_no_gender_c.png')
+
+feature_count, pos_neg_count = explainer.count_shap(test,
+                                                    4,
+                                                    input_dimension)
+
+plot_bar(x=np.arange(input_dimension),
+         height=feature_count,
+         pos_neg=pos_neg_count,
+         labels=train_columns,
+         title='Shapley - Female Data, Gender Removed.',
+         save_name='shap_f_feat_no_gender_c.png')
+
+
+
+
 
 
